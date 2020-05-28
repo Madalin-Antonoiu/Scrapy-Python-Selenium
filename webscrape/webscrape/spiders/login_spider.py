@@ -4,7 +4,6 @@ import timeago
 from scrapy.http import FormRequest
 from scrapy.utils.response import open_in_browser
 
-
 class TicketItem(scrapy.Item):
     id = scrapy.Field()
     time_ago = scrapy.Field()

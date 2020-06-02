@@ -77,20 +77,21 @@ class AutoSD:
     @staticmethod
     def open_assigned_to(): # This is recreation of my highlight_script.js as Selenium
 
-        assigned_to = chrome.find_element_by_xpath("//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]")
-        currently_assigned_to = assigned_to.get_attribute("textContent").strip()
-        # print(currently_assigned_to)
+        # Strings
+        assig_to = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
+        assig_popup = "//table[@class='DialogBox']"
 
-        if currently_assigned_to == 'Unassigned':
+        assigned_to = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_to))
+        assig_to_str = assigned_to.get_attribute("textContent").strip()
+
+        if assig_to_str == 'Unassigned':
             assigned_to.click()
-            return 'clicked'
-
+            assigned_popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
+            return {'Step 1': 'Got row element', 'element': assigned_popup}
 
 
     def main(self):
-
         try:
-
             if not COOKIES_PATH.is_file():
                 self.get_sd_cookies() # If cookies.txt not to be found, log in and create em
 
@@ -98,9 +99,8 @@ class AutoSD:
             self.load_cookies(chrome, COOKIES)
             chrome.get('https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
 
-            self.open_assigned_to()
-            # safe0 = self.open_assigned_to()
-            #print(safe0)
+            safe0 = self.open_assigned_to()
+            print(safe0)
 
             #self.inject_javascript()
 

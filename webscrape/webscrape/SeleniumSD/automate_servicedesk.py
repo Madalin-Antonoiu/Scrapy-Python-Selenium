@@ -14,7 +14,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from pathlib import Path
 import traceback
 import logging
-
+from selenium.webdriver.chrome.options import Options # headless
 
 class AutoSD:
 
@@ -26,7 +26,18 @@ class AutoSD:
         COOKIES = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\cookies.txt"
         CHROMEDRIVER_PATH = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\chromedriver.exe"
         COOKIES_PATH = Path(COOKIES)
-        chrome = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH)  # This will open the Chrome window
+
+        # can also do headless ( no GUI)
+        options = Options()
+        options.add_argument('--headless')
+        options.add_argument('--disable-gpu')
+        #driver = webdriver.Chrome(options=options)
+
+
+        chrome = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, options=options)  # This will open the Chrome window
+        #chrome.minimize_window() # for the browser to start minimized
+
+
 
         session_ID = chrome.session_id
         URL = chrome.command_executor._url

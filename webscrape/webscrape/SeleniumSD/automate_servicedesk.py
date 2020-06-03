@@ -27,15 +27,16 @@ class AutoSD:
         CHROMEDRIVER_PATH = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\chromedriver.exe"
         COOKIES_PATH = Path(COOKIES)
 
-        # can also do headless ( no GUI)
+
+        # Headless ( no GUI)
         options = Options()
         options.add_argument('--headless')
         options.add_argument('--disable-gpu')
         #driver = webdriver.Chrome(options=options)
-
-
         chrome = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, options=options)  # This will open the Chrome window
-        #chrome.minimize_window() # for the browser to start minimized
+        chrome.minimize_window()  # for the browser to start minimized
+
+
 
 
 
@@ -85,33 +86,65 @@ class AutoSD:
         my_file.close()
         chrome.execute_script(contents) # replace with selenium doing things
 
+
+
+
+
+
+    # These are the steps
     @staticmethod
     def open_assigned_to(): # This is recreation of my highlight_script.js as Selenium
-
-        # Strings
         assig_cell = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
         assig_popup = "//table[@class='DialogBox']"
+        ticket_id_path = "//td[@id='RequestsView_r_0_5']//div"
 
         assigned_cell = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_cell))
-        assig_to_str = assigned_cell.get_attribute("textContent").strip()
+        assigned_to = assigned_cell.text.strip()
 
-        if assig_to_str == 'Unassigned':
+        ticket_id = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(ticket_id_path)).text.strip()
+
+        if assigned_to == 'Unassigned':
             assigned_cell.click()
-            assigned_to_popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
-            return assigned_to_popup, 'Step1: Successfully opened AssignedTo popup'
+            popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
+            return popup, assigned_to, ticket_id, 'Step1: Opened AssignedTo popup for:'
+
+        raise Exception("Fail - Not Unassigned")
 
     @staticmethod
-    def check_it(msg):
-        group = "// div[ @ id = 's2id_assignGroup']"
+    def get_technician(msg2):
         technician = "//div[@id='s2id_selectTechnician']"
+        tech_name_xpath = "//div[@id='s2id_selectTechnician']//a[@class='select2-choice']//span"
 
-        if msg is not None:
-            group_elem = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(group))
-            technician_elem = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(technician))
-            technician_elem.click()
+        if msg2 is not None:
+            current_tech = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(tech_name_xpath)).text.strip() # these 2 lines represent the first span text of technician
+            # technician_elem.click()
 
-            return technician_elem, group_elem, 'Step2: Got Group and Technician elements'
+            return current_tech, 'Step2: Current technician: '
 
+        raise Exception("Technician is NULL 394934834")
+
+    @staticmethod
+    def open_group(current_technician):
+        if current_technician == "NONE":
+            group_xpath = "//div[@id='s2id_assignGroup']//a[@class='select2-choice']"
+            open_group = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(group_xpath)).click()
+            return open_group, 'Step3: Group list opened'
+
+        raise Exception("Fail - Current technician is not NONE")
+
+    @staticmethod
+    def select_service_desk(msg):
+        if msg == "Step3: Group list opened":
+            groups_ul_xpath = "//div[@id='select2-drop']//ul//li"
+            groups = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_elements_by_xpath(groups_ul_xpath))
+            #return groups[5].text 'Csi Facilities'
+
+            for group in groups:
+                if group.text == "Service Desk":
+                    group.click()
+                    return 'Step4: Chosen Service Desk'
+
+        raise Exception("Fail - groups list was not opened")
 
     def main(self):
         try:
@@ -122,11 +155,18 @@ class AutoSD:
             self.load_cookies(chrome, COOKIES)
             chrome.get('https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
 
-            assigned_to_popup, message0 = self.open_assigned_to()
-            print(message0)
+            # Main execution chain
+            popup, assigned_to, ticket_id, msg1 = self.open_assigned_to()
+            print(msg1 + " " + ticket_id + " , " + assigned_to) # "Opened AssignedTo popup for:"
 
-            technician_elem, group_elem, message1 = self.check_it(assigned_to_popup)
-            print(message1)
+            current_technician, msg2 = self.get_technician(msg1)
+            print(msg2 + " " + current_technician) # 'Current technician: '
+
+            group, msg3 = self.open_group(current_technician)
+            print(msg3)
+
+            msg4 = self.select_service_desk(msg3)
+            print(msg4)
 
             #self.inject_javascript()
 

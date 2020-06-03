@@ -6,10 +6,12 @@ import asyncio
 import time
 
 
-def submit(): # put your functions for new thread here
+# Controlled by start_submit_thread
+def submit():
     print('It is running')
     bot = AutoSD()
     bot.main()
+
     #text1.insert(tk.INSERT, "Done")
 
 def start_submit_thread(event):
@@ -18,6 +20,7 @@ def start_submit_thread(event):
     submit_thread.daemon = True
     progressbar.start()
     submit_thread.start()
+    window.iconify()
     window.after(20, check_submit_thread)
 
 def check_submit_thread():
@@ -32,6 +35,7 @@ def close_app():
 
 def print_val():
     print(inputDc_entry.get())
+
 
 window = tk.Tk()
 window.title('CSI Quick Tools')

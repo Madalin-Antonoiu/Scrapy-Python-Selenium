@@ -84,8 +84,15 @@ vdiBroker_button = tk.Button(frame_main_2, text="Open", command=print_val, bg="d
 
 
 # Bottom row Frame1 - Buttons
-groupUnassigned = tk.Button(frame_bottom_1, text="Group Unassigned", command=submit, bg="orange", fg="white", relief="raised", width="15", font={"Helvetica 10 bold"})
-groupUnassigned.grid(row=2, column=0, sticky="w", padx=5, pady=2)
+groupUnassigned = tk.Button(frame_bottom_1,
+                            text="Group Unassigned",
+                            command=lambda: start_submit_thread(None),
+                            bg="orange",
+                            fg="white",
+                            relief="raised",
+                            width="15",
+                            font={"Helvetica 10 bold"}
+                            ).grid(row=2, column=0, sticky="w", padx=5, pady=2)
 
 myTickets = tk.Button(frame_bottom_1, text="My Tickets", command=print_val, bg="orange", fg="white", relief="raised", width="15", font={"Helvetica 10 bold"})
 myTickets.grid(row=2, column=1, sticky="w", padx=5, pady=2)
@@ -118,8 +125,7 @@ text1.pack()# without .pack() there is no render on screen
 progressbar = Progressbar(frame_bottom_3, mode='indeterminate', length=100)
 progressbar.grid(column=1, row=0, sticky="w")
 
-tk.Button(frame_bottom_3, text="Group Unassigned", command=lambda: start_submit_thread(None)).grid(column=0, row=1, sticky="E") # this is how you call function on a separate thread
-tk.Button(frame_bottom_3, text="Group Unassigned", command=lambda: start_submit_thread(None)).grid(column=0, row=2, sticky="E") # this is how you call function on a separate thread
+# model, don't delete # tk.Button(frame_bottom_3, text="Group Unassigned", command=lambda: start_submit_thread(None)).grid(column=0, row=2, sticky="E") # this is how you call function on a separate thread
 
 
 window.mainloop() # End

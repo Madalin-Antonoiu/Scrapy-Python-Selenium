@@ -6,6 +6,7 @@
 
 # RUN THE GUI and press the buttons!
 
+# for LOGS.txt, replace pickle with plain read and write ;)
 
 import pickle
 import pprint
@@ -15,18 +16,22 @@ from pathlib import Path
 import traceback
 import logging
 from selenium.webdriver.chrome.options import Options # headless
+import datetime
+
+
 
 class AutoSD:
 
     def __init__(self):
         print('initiating the bot...')
-        global USER, PASSWORD, COOKIES_PATH, COOKIES, chrome, session_ID, URL
+        global USER, PASSWORD, COOKIES_PATH, COOKIES, chrome, session_ID, URL, LOGS, LOGS_PATH
         USER = 'antonoium'
         PASSWORD = 'madutzu93classiC'
         COOKIES = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\cookies.txt"
         CHROMEDRIVER_PATH = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\chromedriver.exe"
         COOKIES_PATH = Path(COOKIES)
-
+        LOGS = "C:\\Users\\antonoium\\Desktop\\venv\\webscrape\\webscrape\\SeleniumSD\\logs.txt"
+        LOGS_PATH = Path(LOGS)
 
         # Headless ( no GUI)
         options = Options()
@@ -35,9 +40,6 @@ class AutoSD:
         #driver = webdriver.Chrome(options=options)
         chrome = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH, options=options)  # This will open the Chrome window
         chrome.minimize_window()  # for the browser to start minimized
-
-
-
 
 
         session_ID = chrome.session_id
@@ -86,12 +88,37 @@ class AutoSD:
         my_file.close()
         chrome.execute_script(contents) # replace with selenium doing things
 
+    # Only for logs.txt
+    @staticmethod
+    def get_logs(ticket_id, agent):
+        x = datetime.datetime.now()
+        formatted = "%a, %d %b %Y, at %H:%M"
+        date_time = x.strftime(formatted)
+        print(date_time)
 
+        text = date_time + " - " + ticket_id + " , " + agent
 
+        if LOGS_PATH.is_file():
 
+            # Fix for : EOFError: Ran out of input
+            try:
+                logs = pickle.load(open(LOGS, "rb"))  # read from logs already
+                saved_text = logs + "\n" + text
+                return saved_text
+            except EOFError:
+                saved_text = text
+                return saved_text
 
+        else:
+            # In case logs.txt doesn't exist in the location
+            saved_text = text
+            return saved_text
 
-    # These are the steps
+    @staticmethod
+    def save_logs(text, location):
+        pickle.dump(text, open(location, "wb"))
+
+    # Main functions
     @staticmethod
     def open_assigned_to(): # This is recreation of my highlight_script.js as Selenium
         assig_cell = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
@@ -99,14 +126,14 @@ class AutoSD:
         ticket_id_path = "//td[@id='RequestsView_r_0_5']//div"
 
         assigned_cell = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_cell))
-        assigned_to = assigned_cell.text.strip()
+        agent = assigned_cell.text.strip()
 
         ticket_id = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(ticket_id_path)).text.strip()
 
-        if assigned_to == 'Unassigned':
+        if agent == 'Unassigned':
             assigned_cell.click()
             popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
-            return popup, assigned_to, ticket_id, 'Step1: Opened AssignedTo popup for:'
+            return popup, agent, ticket_id, 'Step1: Opened AssignedTo popup for:'
 
         raise Exception("Fail - Not Unassigned")
 
@@ -148,6 +175,7 @@ class AutoSD:
 
     def main(self):
         try:
+
             if not COOKIES_PATH.is_file():
                 self.get_sd_cookies() # If cookies.txt not to be found, log in and create em
 
@@ -156,8 +184,8 @@ class AutoSD:
             chrome.get('https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
 
             # Main execution chain
-            popup, assigned_to, ticket_id, msg1 = self.open_assigned_to()
-            print(msg1 + " " + ticket_id + " , " + assigned_to) # "Opened AssignedTo popup for:"
+            popup, agent, ticket_id, msg1 = self.open_assigned_to()
+            print(msg1 + " " + ticket_id + " , " + agent) # "Opened AssignedTo popup for:"
 
             current_technician, msg2 = self.get_technician(msg1)
             print(msg2 + " " + current_technician) # 'Current technician: '
@@ -167,6 +195,11 @@ class AutoSD:
 
             msg4 = self.select_service_desk(msg3)
             print(msg4)
+
+            txt = self.get_logs(ticket_id, agent)
+            self.save_logs(txt, LOGS)
+
+
 
             #self.inject_javascript()
 

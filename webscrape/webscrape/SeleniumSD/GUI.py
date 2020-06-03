@@ -4,15 +4,22 @@ from webscrape.webscrape.SeleniumSD.automate_servicedesk import AutoSD # importi
 import threading
 import asyncio
 import time
+import subprocess
 
+def text(index, string):
+    # I do all 3 so it stays disabled again like default after inserting
+    text1.configure(state='normal')
+    text1.insert(index, string)
+    text1.configure(state='disabled')
 
 # Controlled by start_submit_thread
 def submit():
     print('It is running')
+    text(0.0, 'Script running...' + '\n')
     bot = AutoSD()
-    bot.main()
+    output = bot.main('1') # return from main function, pass it the row number
+    text(2.0, output + '\n')
 
-    #text1.insert(tk.INSERT, "Done")
 
 def start_submit_thread(event):
     global submit_thread
@@ -34,7 +41,8 @@ def close_app():
     window.destroy()
 
 def print_val():
-    print(inputDc_entry.get())
+    print(inputDc_entry.get()) # gets the value from inputDc input field from user
+    text1.insert(0.0, "Shazaam")
 
 
 window = tk.Tk()
@@ -98,8 +106,8 @@ myTickets = tk.Button(frame_bottom_1, text="My Tickets", command=print_val, bg="
 myTickets.grid(row=2, column=1, sticky="w", padx=5, pady=2)
 
 # Bottom row Frame2 - Text Box
-text1 = tk.Text(frame_bottom_2, height=10, width=34)
-text1.config(state="disabled")
+text1 = tk.Text(frame_bottom_2, height=15, width=45, bg="gray", fg="black", wrap="word", state='disabled')
+#text1.config(state="disabled")
 
 
 
@@ -126,7 +134,7 @@ progressbar = Progressbar(frame_bottom_3, mode='indeterminate', length=100)
 progressbar.grid(column=1, row=0, sticky="w")
 
 # model, don't delete # tk.Button(frame_bottom_3, text="Group Unassigned", command=lambda: start_submit_thread(None)).grid(column=0, row=2, sticky="E") # this is how you call function on a separate thread
-
+tk.Button(frame_bottom_3, text="Tickets Number Dropdown", command=lambda: start_submit_thread(None)).grid(column=0, row=2, sticky="E") # this is how you call function on a separate thread
 
 window.mainloop() # End
 

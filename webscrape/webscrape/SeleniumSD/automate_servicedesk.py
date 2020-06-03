@@ -59,7 +59,7 @@ class AutoSD:
         for cookie in cookies:
             driver.add_cookie(cookie)
 
-    def get_sd_cookies(self):
+    def obtain_sd_cookies(self):
 
         chrome.get('https://servicedesk.csiltd.co.uk/')  # Group Unassigned
 
@@ -88,15 +88,17 @@ class AutoSD:
         my_file.close()
         chrome.execute_script(contents) # replace with selenium doing things
 
+
+
     # Only for logs.txt
     @staticmethod
-    def get_logs(ticket_id, agent):
+    def get_logs(ticket_id, agent, current_technician, subject, priority):
         x = datetime.datetime.now()
         formatted = "%a, %d %b %Y, at %H:%M"
         date_time = x.strftime(formatted)
         print(date_time)
 
-        text = date_time + " - " + ticket_id + " , " + agent
+        text = date_time + " - " + " [" + priority + "] " + ticket_id + " : " + agent + " , " + current_technician + " , " + "[" + subject + "]"
 
         if LOGS_PATH.is_file():
 
@@ -118,22 +120,42 @@ class AutoSD:
     def save_logs(text, location):
         pickle.dump(text, open(location, "wb"))
 
+
     # Main functions
     @staticmethod
-    def open_assigned_to(): # This is recreation of my highlight_script.js as Selenium
-        assig_cell = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
-        assig_popup = "//table[@class='DialogBox']"
-        ticket_id_path = "//td[@id='RequestsView_r_0_5']//div"
+    def open_assigned_to(nr): # This is recreation of my highlight_script.js as Selenium
+        row = nr # starts with 0 being first, 4 means 5th row
+        popup_path = "//table[@class='DialogBox']"
+        ticket_id_path = "//td[@id='RequestsView_r_"+row+"_5']//div"
+        subject_path = "//td[@id='RequestsView_r_"+row+"_6']//div/a"
+        assig_cell = "//td[@id='RequestsView_r_"+row+"_7']//div/div"
+        priority_path = "// td[ @ id = 'RequestsView_r_"+row+"_8']//div/table/tbody/tr/td[last()]"
+        all_rows = "//*[@id='RequestsView_TABLE']/tbody/tr[position() > 2]"
 
+
+        print(assig_cell)
+
+        # Cookies might have expired if you get an error here
         assigned_cell = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_cell))
         agent = assigned_cell.text.strip()
 
+
+        # Counting total tickets number
+        all_rows_len = WebDriverWait(chrome, 10).until(lambda chrome:chrome.find_elements_by_xpath(all_rows))
+        count = len(all_rows_len)
+        print('---- Group Unassigned : ' + str(count) + ' tickets -----')
+
+        #repeating_tickets and their count
+
+
         ticket_id = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(ticket_id_path)).text.strip()
+        subject = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(subject_path)).text.strip()
+        priority = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(priority_path)).text.strip()
 
         if agent == 'Unassigned':
             assigned_cell.click()
-            popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
-            return popup, agent, ticket_id, 'Step1: Opened AssignedTo popup for:'
+            popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(popup_path))
+            return popup, agent, ticket_id, subject, priority, row, 'Step1: Popup clicked:'
 
         raise Exception("Fail - Not Unassigned")
 
@@ -173,22 +195,26 @@ class AutoSD:
 
         raise Exception("Fail - groups list was not opened")
 
-    def main(self):
+
+    #def GROUP_UNASSIGNED(self):
+
+    def main(self, nr):
         try:
-
             if not COOKIES_PATH.is_file():
-                self.get_sd_cookies() # If cookies.txt not to be found, log in and create em
+                print('Cookies.txt not found, obtaining cookies.')
+                self.obtain_sd_cookies()  # If cookies.txt not to be found, log in and create em
 
-            # Otherwise skip logging and use cookies
+                # Otherwise skip logging and use cookies
             self.load_cookies(chrome, COOKIES)
-            chrome.get('https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
+            chrome.get(
+                'https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
 
             # Main execution chain
-            popup, agent, ticket_id, msg1 = self.open_assigned_to()
-            print(msg1 + " " + ticket_id + " , " + agent) # "Opened AssignedTo popup for:"
+            popup, agent, ticket_id, subject, priority, row, msg1 = self.open_assigned_to(nr)
+            print(msg1 + " " + priority + " " + ticket_id + " - " + agent + " , " + "[" + subject + "]")  # "Opened AssignedTo popup for:"
 
             current_technician, msg2 = self.get_technician(msg1)
-            print(msg2 + " " + current_technician) # 'Current technician: '
+            print(msg2 + " " + current_technician)  # 'Current technician: '
 
             group, msg3 = self.open_group(current_technician)
             print(msg3)
@@ -196,12 +222,12 @@ class AutoSD:
             msg4 = self.select_service_desk(msg3)
             print(msg4)
 
-            txt = self.get_logs(ticket_id, agent)
+            txt = self.get_logs(ticket_id, agent, current_technician, subject, priority)
             self.save_logs(txt, LOGS)
 
-
-
             #self.inject_javascript()
+
+            return "[" + row + "]" + priority + " " + ticket_id + " - " + agent + " , " + "[" + subject + "]"
 
         except Exception as e:
             logging.error(traceback.format_exc())
@@ -230,3 +256,4 @@ class AutoSD:
         # myfile.close()                   # close the file
         # print(contents)                  # print contents
 
+    #def repeated(self):

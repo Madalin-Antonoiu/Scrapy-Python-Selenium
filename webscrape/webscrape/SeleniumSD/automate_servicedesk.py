@@ -78,16 +78,28 @@ class AutoSD:
     def open_assigned_to(): # This is recreation of my highlight_script.js as Selenium
 
         # Strings
-        assig_to = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
+        assig_cell = "//*[@id='RequestsView_TABLE']/tbody/tr[3]/td[8]"
         assig_popup = "//table[@class='DialogBox']"
 
-        assigned_to = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_to))
-        assig_to_str = assigned_to.get_attribute("textContent").strip()
+        assigned_cell = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_cell))
+        assig_to_str = assigned_cell.get_attribute("textContent").strip()
 
         if assig_to_str == 'Unassigned':
-            assigned_to.click()
-            assigned_popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
-            return {'Step 1': 'Got row element', 'element': assigned_popup}
+            assigned_cell.click()
+            assigned_to_popup = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(assig_popup))
+            return assigned_to_popup, 'Step1: Successfully opened AssignedTo popup'
+
+    @staticmethod
+    def check_it(msg):
+        group = "// div[ @ id = 's2id_assignGroup']"
+        technician = "//div[@id='s2id_selectTechnician']"
+
+        if msg is not None:
+            group_elem = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(group))
+            technician_elem = WebDriverWait(chrome, 10).until(lambda chrome: chrome.find_element_by_xpath(technician))
+            technician_elem.click()
+
+            return technician_elem, group_elem, 'Step2: Got Group and Technician elements'
 
 
     def main(self):
@@ -99,8 +111,11 @@ class AutoSD:
             self.load_cookies(chrome, COOKIES)
             chrome.get('https://servicedesk.csiltd.co.uk/WOListView.do?requestViewChanged=true&viewName=38020_MyView&globalViewName=All_Requests')
 
-            safe0 = self.open_assigned_to()
-            print(safe0)
+            assigned_to_popup, message0 = self.open_assigned_to()
+            print(message0)
+
+            technician_elem, group_elem, message1 = self.check_it(assigned_to_popup)
+            print(message1)
 
             #self.inject_javascript()
 

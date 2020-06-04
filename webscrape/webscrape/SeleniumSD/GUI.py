@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter.filedialog import askopenfilename
 from tkinter.ttk import Progressbar
+
 from webscrape.webscrape.SeleniumSD.automate_servicedesk import AutoSD  # importing my own script class
 import threading
 import asyncio
 import time
 import subprocess
-
+import emoji
 
 def text(index, string):
     # I do all 3 so it stays disabled again like default after inserting
@@ -24,7 +25,7 @@ def submit():
     text(1.0, '---- Group Unassigned, row:' + ' ' + row + '----' + '\n')
     text(2.0, 'Script running...' + '\n')
     progressbar.grid(column=0, row=0, sticky="w")  # Start showing the progress bar
-    window.iconify() # you can remove it or put it someweherelse
+   # window.iconify() # the app will minimize
     bot = AutoSD()
     output = bot.main(row)  # return from main function, pass it the row number
 
@@ -72,16 +73,19 @@ def open_logs():
 
 window = tk.Tk()
 window.title('CSI Quick Tools')
-window.geometry("440x660")
+window.geometry("400x630")
 window.resizable("true", "true")  # (hor, ver.)
 window.columnconfigure(0, weight=1)
-window.rowconfigure(2, weight=1)
+window.rowconfigure(3, weight=1)
+
 
 #Menu bar
 menubar = tk.Menu(window)
+window.config(menu=menubar)
 filemenu = tk.Menu(menubar, tearoff=0)
 menubar.add_cascade(label="File", menu=filemenu)
 filemenu.add_command(label="Logs", command=lambda: start_submit_thread(open_logs))
+filemenu.add_command(label="ServiceDesk - Get Cookies/ Log In")
 filemenu.add_separator()
 filemenu.add_command(label="Exit", command=window.quit)
 
@@ -94,9 +98,17 @@ bottom_frame = tk.Frame(window, borderwidth=2, pady=5)
 center_frame.grid(row=0, column=0, sticky='n')
 bottom_frame.grid(row=1, column=0, sticky='s')
 
+bottom_frame_1 = tk.Frame(bottom_frame, borderwidth=2)
+bottom_frame_2 = tk.Frame(bottom_frame, borderwidth=2)
 # Header
-header = tk.Label(center_frame, text="Other Tools", bg="grey", fg="black", height="1", width="34", font={"Helvetica 14 bold"})
+
+
+header = tk.Label(center_frame, text="Web Login", bg="grey", fg="black", height="1", width="34", font={"Helvetica 14 bold"})
 header.pack(fill="x", pady="20 0")
+
+
+
+
 
 # Center frame split into two frames
 
@@ -119,7 +131,8 @@ domainController_button = tk.Button(frame_main_1,
                                     fg="white",
                                     relief="raised",
                                     width="10",
-                                    font={"Helvetica 10 bold"})
+                                    font="Helvetica 10 bold"
+                                    )
 
 # VDI Broker
 vdiBroker = tk.Label(frame_main_2, text="VDI Broker")
@@ -133,7 +146,8 @@ vdiBroker_button = tk.Button(frame_main_2,
                              fg="white",
                              relief="raised",
                              width="10",
-                             font={"Helvetica 10 bold"})
+                             font="Helvetica 10 bold"
+                             )
 
 # Group Unassigned
 groupUnassigned = tk.Label(frame_main_3, text="Group Unassigned")
@@ -147,7 +161,8 @@ groupUnassigned_button = tk.Button(frame_main_3,
                                    fg="white",
                                    relief="raised",
                                    width="15",
-                                   font={"Helvetica 10 bold"})
+                                   font="Helvetica 10 bold"
+                                   )
 
 text1 = tk.Text(frame_main_4,  bg="gray", fg="black", wrap="word", state='disabled')
 
@@ -159,6 +174,10 @@ frame_main_2.pack(fill="x", pady="2")
 frame_main_3.pack(fill="x", pady="2")
 frame_main_4.pack(fill="both", expand = True)
 frame_main_5.pack(fill="x", pady="2")
+
+bottom_frame_1.pack(fill="x", pady="2")
+bottom_frame_2.pack(fill="x", pady="2")
+
 
 inputDc.pack(side="left", padx="5", expand=False)
 inputDc_entry.pack(side="left", padx="5", expand=False)
@@ -172,12 +191,17 @@ groupUnassigned.pack(side="left", padx="5", expand=False)
 groupUnassigned_entry.pack(side="left", padx="5", expand=False)
 groupUnassigned_button.pack(side="left", padx="2", expand=False)
 
-text1.pack(side="left", expand = True)  # without .pack() there is no render on screen
+text1.pack(side="top", expand=True)  # without .pack() there is no render on screen
 progressbar = Progressbar(frame_main_5, mode='indeterminate', length=100)
+
+heart = emoji.emojize(":green_heart:")
+footer = tk.Label(bottom_frame_1, text="Made with " + heart + " by Madalin", fg="#333333", font=("Courier", 8), )
+footer.pack(fill="x", pady="35", side="right")
+
 
 #tk.Button(bottom_frame, text="Open Logs", command=lambda: start_submit_thread(None)).grid(column=0, row=0, sticky="S") # sticky is cardinal points
 
-window.config(menu=menubar)
+
 window.mainloop()  # End
 
 
